@@ -1,0 +1,522 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Panel Interactivo de Campañas</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Arial', sans-serif; background: #f4f7f6; color: #333; }
+            .container { max-width: 1400px; margin: 20px auto; }
+            .card { background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+            .header { background: #1e3c72; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header h1 { font-size: 2em; }
+            .filters { padding: 15px 20px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; }
+            .filters label { font-weight: bold; margin-right: 5px; }
+            .filters input, .filters select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+            .post-links table { width: 100%; border-collapse: collapse; }
+            .post-links th, .post-links td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+            .post-links th { background-color: #f8f9fa; }
+            .post-links a { color: #007bff; text-decoration: none; font-weight: bold; }
+            .post-links a:hover { text-decoration: underline; }
+            .pagination-controls { text-align: center; padding: 15px; }
+            .pagination-controls button, .filter-btn { padding: 8px 16px; margin: 0 5px; cursor: pointer; border: 1px solid #ccc; background-color: #fff; border-radius: 5px; font-weight: bold; }
+            .pagination-controls button:disabled { cursor: not-allowed; background-color: #f8f9fa; color: #aaa; }
+            .pagination-controls span { margin: 0 10px; font-weight: bold; vertical-align: middle; }
+            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; padding: 20px; }
+            .stat-card { padding: 20px; text-align: center; border-left: 5px solid; }
+            .stat-card.total { border-left-color: #007bff; } .stat-card.positive { border-left-color: #28a745; } .stat-card.negative { border-left-color: #dc3545; } .stat-card.neutral { border-left-color: #ffc107; } .stat-card.pautas { border-left-color: #6f42c1; }
+            .stat-number { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; }
+            .positive-text { color: #28a745; } .negative-text { color: #dc3545; } .neutral-text { color: #ffc107; } .total-text { color: #007bff; } .pautas-text { color: #6f42c1; }
+            .charts-section, .comments-section { padding: 20px; }
+            .section-title { font-size: 1.5em; margin-bottom: 20px; text-align: center; color: #333; }
+            .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+            .chart-container { position: relative; height: 400px; } .chart-container.full-width { grid-column: 1 / -1; }
+            .comment-item { margin-bottom: 10px; padding: 15px; border-radius: 8px; border-left: 5px solid; word-wrap: break-word; }
+            .comment-positive { border-left-color: #28a745; background: #f0fff4; } .comment-negative { border-left-color: #dc3545; background: #fff5f5; } .comment-neutral { border-left-color: #ffc107; background: #fffbeb; }
+            .comment-meta { margin-bottom: 8px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; }
+            .comment-date { color: #6c757d; font-style: italic; }
+            .comments-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+            .filter-btn.active { background-color: #007bff; color: white; border-color: #007bff; }
+            @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+        </style>
+    </head>
+    <body>
+        <script id="data-store" type="application/json">[{"date": "2026-04-12T07:45:24", "comment": "Que ridi\u0301culo y sin contexto, busquen una mejor oportunidad, un creativo de publicidad que los identifique.", "sentiment": "Negativo", "topic": "Reacci\u00f3n a Creatividades / Humor", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481235250954/", "post_label": "Pauta 10 (Facebook)"}, {"date": "2026-04-26T10:29:18", "comment": "Es muy rico, pero ya viene por la mitad \ud83d\ude22", "sentiment": "Negativo", "topic": "Momentos o deseos de consumo", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481211917623/", "post_label": "Pauta 3 (Facebook)"}, {"date": "2026-04-20T09:50:11", "comment": "Colombia a Australia.(Bogota\u0301 - Sidney)", "sentiment": "Neutro", "topic": "Otros", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481211917623/", "post_label": "Pauta 3 (Facebook)"}, {"date": "2026-04-14T15:59:24", "comment": "N\u0303", "sentiment": "Neutro", "topic": "Fuera de Tema / No Relevante", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481255250952/", "post_label": "Pauta 11 (Facebook)"}, {"date": "2026-04-10T14:52:22", "comment": "Empezaron fuerte jajaja", "sentiment": "Neutro", "topic": "Reacci\u00f3n a Creatividades / Humor", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481341917610/", "post_label": "Pauta 5 (Facebook)"}, {"date": "2026-04-10T13:46:27", "comment": "Hecho. Esta amen", "sentiment": "Neutro", "topic": "Fuera de Tema / No Relevante", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481341917610/", "post_label": "Pauta 5 (Facebook)"}, {"date": "2026-04-23T00:32:18", "comment": "Y la rata mona que dijo?", "sentiment": "Negativo", "topic": "Otros", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481325250945/", "post_label": "Pauta 2 (Facebook)"}, {"date": "2026-04-18T20:33:45", "comment": "No me ha tocado ni las ratas ni la basura, me encanta la gran manzana", "sentiment": "Positivo", "topic": "Opini\u00f3n General del Producto", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481325250945/", "post_label": "Pauta 2 (Facebook)"}, {"date": "2026-04-09T06:02:01", "comment": "Ame\u0301n", "sentiment": "Neutro", "topic": "Fuera de Tema / No Relevante", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481325250945/", "post_label": "Pauta 2 (Facebook)"}, {"date": "2026-04-08T19:29:19", "comment": "Lo recibo", "sentiment": "Neutro", "topic": "Fuera de Tema / No Relevante", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481325250945/", "post_label": "Pauta 2 (Facebook)"}, {"date": "2026-01-25T18:31:50", "comment": "Con todo respeto \ud83e\udee1 esta clase de contenido no tiene para mi\u0301 ni 5 de gracia\ud83d\ude2c\ud83e\udee0", "sentiment": "Negativo", "topic": "Reacci\u00f3n a Creatividades / Humor", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481325250945/", "post_label": "Pauta 2 (Facebook)"}, {"date": "2026-01-21T20:55:15", "comment": "Si que pecao y le pegan por que\u0301 ladra", "sentiment": "Negativo", "topic": "Reacci\u00f3n a Creatividades / Humor", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481325250945/", "post_label": "Pauta 2 (Facebook)"}, {"date": "2026-04-13T20:03:07", "comment": "Producto judi\u0301o \ud83d\udca9\ud83d\udca9\ud83d\udca9", "sentiment": "Negativo", "topic": "Otros", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1302481208584290/", "post_label": "Pauta 6 (Facebook)"}, {"date": "2026-01-28T20:47:03", "comment": "Parece un anuncio de aguila jsjsjsjs", "sentiment": "Neutro", "topic": "Reacci\u00f3n a Creatividades / Humor", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1304033688429042/", "post_label": "Pauta 7 (Facebook)"}, {"date": "2026-03-04T04:46:48", "comment": "Para disfrutar del lacto suero no ay lugar", "sentiment": "Neutro", "topic": "Otros", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1334919078673836/", "post_label": "Pauta 4 (Facebook)"}, {"date": "2026-02-21T07:20:53", "comment": "No ay hora ay lacto suero", "sentiment": "Neutro", "topic": "Otros", "platform": "Facebook", "post_url": "https://www.facebook.com/100064672685926/posts/1334919078673836/", "post_label": "Pauta 4 (Facebook)"}, {"date": "2026-01-21T11:25:30", "comment": "Mera azucar", "sentiment": "Neutro", "topic": "Ingredientes / Salud", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DTv7wFbgIVP/", "post_label": "Pauta 8 (Instagram)"}, {"date": "2026-02-06T00:16:24", "comment": "que ganas de uno yaaaaa (son las 12 de la noche)", "sentiment": "Neutro", "topic": "Momentos o deseos de consumo", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DUZJ3pdAK6i/", "post_label": "Pauta 9 (Instagram)"}, {"date": "2026-04-14T14:22:17", "comment": "Alta poronga", "sentiment": "Negativo", "topic": "Fuera de Tema / No Relevante", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-08T22:55:33", "comment": "Ay que rico", "sentiment": "Positivo", "topic": "Opini\u00f3n General del Producto", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-08T10:12:10", "comment": "Yo hecho al de marketing", "sentiment": "Neutro", "topic": "Otros", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-07T16:54:00", "comment": "El bonyurt es la verga\ud83d\ude02", "sentiment": "Negativo", "topic": "Otros", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-07T16:13:13", "comment": "No sirve el enlace cuando voy a registrarme", "sentiment": "Negativo", "topic": "Otros", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-07T00:30:58", "comment": "Mondyurt \ud83d\ude0f jajajajajajaja", "sentiment": "Neutro", "topic": "Reacci\u00f3n a Creatividades / Humor", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-06T23:15:20", "comment": "Jajajaja nooooooo por favor nooooo cambien al de marketing y disen\u0303o", "sentiment": "Negativo", "topic": "Reacci\u00f3n a Creatividades / Humor", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-06T20:07:59", "comment": "El bon yurt esta\u0301 parado \ud83d\udcaa", "sentiment": "Neutro", "topic": "Otros", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-06T16:28:52", "comment": "Di\u0301ganle al de marketing que tambie\u0301n ese icono en el menor tiempo posible, ya hay dos comentarios que confirman lo anterior", "sentiment": "Neutro", "topic": "Momentos o deseos de consumo", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-06T16:25:16", "comment": "Bonyourt sabor a nepe?", "sentiment": "Neutro", "topic": "Otros", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}, {"date": "2026-04-06T16:22:16", "comment": "Joa yo pense\u0301 que era una picha", "sentiment": "Negativo", "topic": "Otros", "platform": "Instagram", "post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_label": "Pauta 1 (Instagram)"}]</script>
+        <script id="posts-data-store" type="application/json">[{"post_url": "https://www.instagram.com/p/DWzda2ngMxg/", "post_url_original": "https://www.instagram.com/p/DWzda2ngMxg/", "platform": "Instagram", "comment_count": 11.0, "post_label": "Pauta 1 (Instagram)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302481325250945/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302481325250945/", "platform": "Facebook", "comment_count": 6.0, "post_label": "Pauta 2 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302481211917623/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302481211917623/", "platform": "Facebook", "comment_count": 2.0, "post_label": "Pauta 3 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1334919078673836/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1334919078673836/", "platform": "Facebook", "comment_count": 2.0, "post_label": "Pauta 4 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302481341917610/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302481341917610/", "platform": "Facebook", "comment_count": 2.0, "post_label": "Pauta 5 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302481208584290/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302481208584290/", "platform": "Facebook", "comment_count": 1.0, "post_label": "Pauta 6 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1304033688429042/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1304033688429042/", "platform": "Facebook", "comment_count": 1.0, "post_label": "Pauta 7 (Facebook)"}, {"post_url": "https://www.instagram.com/p/DTv7wFbgIVP/", "post_url_original": "https://www.instagram.com/p/DTv7wFbgIVP/", "platform": "Instagram", "comment_count": 1.0, "post_label": "Pauta 8 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUZJ3pdAK6i/", "post_url_original": "https://www.instagram.com/p/DUZJ3pdAK6i/", "platform": "Instagram", "comment_count": 1.0, "post_label": "Pauta 9 (Instagram)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302481235250954/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302481235250954/", "platform": "Facebook", "comment_count": 1.0, "post_label": "Pauta 10 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302481255250952/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302481255250952/", "platform": "Facebook", "comment_count": 1.0, "post_label": "Pauta 11 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302478318584579/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302478318584579/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 12 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302478391917905/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302478391917905/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 13 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302481328584278/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302481328584278/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 14 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302478268584584/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302478268584584/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 15 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302478275251250/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302478275251250/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 16 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302481298584281/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302481298584281/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 17 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302478291917915/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302478291917915/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 18 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1302478405251237/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1302478405251237/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 19 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316214310544313/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316214310544313/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 20 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316214210544323/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316214210544323/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 21 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316214207210990/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316214207210990/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 22 (Facebook)"}, {"post_url": "https://www.facebook.com/100064867445065/posts/1341152268057009/", "post_url_original": "https://www.facebook.com/100064867445065/posts/1341152268057009/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 23 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316946010471143/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316946010471143/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 24 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316945687137842/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316945687137842/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 25 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316945463804531/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316945463804531/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 26 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316214230544321/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316214230544321/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 27 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1334919048673839/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1334919048673839/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 28 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1334919052007172/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1334919052007172/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 29 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1334919038673840/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1334919038673840/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 30 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1334919072007170/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1334919072007170/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 31 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1367868282045582/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1367868282045582/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 32 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1304033931762351/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1304033931762351/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 33 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316945740471170/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316945740471170/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 34 (Facebook)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316214317210979/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316214317210979/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 35 (Facebook)"}, {"post_url": "https://www.instagram.com/p/DTv7wPwgB0F/", "post_url_original": "https://www.instagram.com/p/DTv7wPwgB0F/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 36 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7kFPAC5g/", "post_url_original": "https://www.instagram.com/p/DTv7kFPAC5g/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 37 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7ljhgGtu/", "post_url_original": "https://www.instagram.com/p/DTv7ljhgGtu/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 38 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7xkRgKdC/", "post_url_original": "https://www.instagram.com/p/DTv7xkRgKdC/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 39 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7mDZgP4h/", "post_url_original": "https://www.instagram.com/p/DTv7mDZgP4h/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 40 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7mbuAAcw/", "post_url_original": "https://www.instagram.com/p/DTv7mbuAAcw/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 41 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7xFfgAnc/", "post_url_original": "https://www.instagram.com/p/DTv7xFfgAnc/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 42 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7xLQgAc6/", "post_url_original": "https://www.instagram.com/p/DTv7xLQgAc6/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 43 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7mV4gIn9/", "post_url_original": "https://www.instagram.com/p/DTv7mV4gIn9/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 44 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7kViADcy/", "post_url_original": "https://www.instagram.com/p/DTv7kViADcy/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 45 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7wzRgFXz/", "post_url_original": "https://www.instagram.com/p/DTv7wzRgFXz/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 46 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7v7QAO57/", "post_url_original": "https://www.instagram.com/p/DTv7v7QAO57/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 47 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DT0eGykgOCW/", "post_url_original": "https://www.instagram.com/p/DT0eGykgOCW/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 48 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUZJ3DFAP2f/", "post_url_original": "https://www.instagram.com/p/DUZJ3DFAP2f/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 49 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DTv7w2fgB6D/", "post_url_original": "https://www.instagram.com/p/DTv7w2fgB6D/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 50 (Instagram)"}, {"post_url": "https://www.facebook.com/100064672685926/posts/1316944213804656/", "post_url_original": "https://www.facebook.com/100064672685926/posts/1316944213804656/", "platform": "Facebook", "comment_count": 0.0, "post_label": "Pauta 51 (Facebook)"}, {"post_url": "https://www.instagram.com/p/DUZJ3eyAIz0/", "post_url_original": "https://www.instagram.com/p/DUZJ3eyAIz0/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 52 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUZJ3g2gFfw/", "post_url_original": "https://www.instagram.com/p/DUZJ3g2gFfw/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 53 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUbI8DNANZb/", "post_url_original": "https://www.instagram.com/p/DUbI8DNANZb/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 54 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUZJ5d1ALPT/", "post_url_original": "https://www.instagram.com/p/DUZJ5d1ALPT/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 55 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUbJHe2AO5a/", "post_url_original": "https://www.instagram.com/p/DUbJHe2AO5a/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 56 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUbI8uCgB2n/", "post_url_original": "https://www.instagram.com/p/DUbI8uCgB2n/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 57 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUbJHyugNkG/", "post_url_original": "https://www.instagram.com/p/DUbJHyugNkG/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 58 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUbIxHEAPZB/", "post_url_original": "https://www.instagram.com/p/DUbIxHEAPZB/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 59 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUi6YciAMYK/", "post_url_original": "https://www.instagram.com/p/DUi6YciAMYK/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 60 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DVPO9c2APFz/", "post_url_original": "https://www.instagram.com/p/DVPO9c2APFz/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 61 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DVeFEt7gCvc/", "post_url_original": "https://www.instagram.com/p/DVeFEt7gCvc/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 62 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DVPO8XfgMDv/", "post_url_original": "https://www.instagram.com/p/DVPO8XfgMDv/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 63 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DVPO8W9gGSf/", "post_url_original": "https://www.instagram.com/p/DVPO8W9gGSf/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 64 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DVPO69eAJXC/", "post_url_original": "https://www.instagram.com/p/DVPO69eAJXC/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 65 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DWzdalAAIDR/", "post_url_original": "https://www.instagram.com/p/DWzdalAAIDR/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 66 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUivrpRgMcb/", "post_url_original": "https://www.instagram.com/p/DUivrpRgMcb/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 67 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaVYGgNjP/", "post_url_original": "https://www.instagram.com/p/DUiaVYGgNjP/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 68 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaWWegA9a/", "post_url_original": "https://www.instagram.com/p/DUiaWWegA9a/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 69 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaM4dAFWW/", "post_url_original": "https://www.instagram.com/p/DUiaM4dAFWW/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 70 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaMa-AMqP/", "post_url_original": "https://www.instagram.com/p/DUiaMa-AMqP/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 71 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaWXUgA6f/", "post_url_original": "https://www.instagram.com/p/DUiaWXUgA6f/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 72 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaMggAJtp/", "post_url_original": "https://www.instagram.com/p/DUiaMggAJtp/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 73 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaee2AMKx/", "post_url_original": "https://www.instagram.com/p/DUiaee2AMKx/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 74 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaVmLgJ_e/", "post_url_original": "https://www.instagram.com/p/DUiaVmLgJ_e/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 75 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaVvXgALR/", "post_url_original": "https://www.instagram.com/p/DUiaVvXgALR/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 76 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaWquADBc/", "post_url_original": "https://www.instagram.com/p/DUiaWquADBc/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 77 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaODWgM9h/", "post_url_original": "https://www.instagram.com/p/DUiaODWgM9h/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 78 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaNCqgBL3/", "post_url_original": "https://www.instagram.com/p/DUiaNCqgBL3/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 79 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaWOpAPJ8/", "post_url_original": "https://www.instagram.com/p/DUiaWOpAPJ8/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 80 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaW8bAMy2/", "post_url_original": "https://www.instagram.com/p/DUiaW8bAMy2/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 81 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiaMfRgE6n/", "post_url_original": "https://www.instagram.com/p/DUiaMfRgE6n/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 82 (Instagram)"}, {"post_url": "https://www.instagram.com/p/DUiae9AAGfE/", "post_url_original": "https://www.instagram.com/p/DUiae9AAGfE/", "platform": "Instagram", "comment_count": 0.0, "post_label": "Pauta 83 (Instagram)"}]</script>
+
+        <div class="container">
+            <div class="card">
+                <div class="header"><h1>📊 Panel Interactivo de Campañas</h1></div>
+                <div class="filters">
+                    <label for="startDate">Inicio:</label> <input type="date" id="startDate" value="2026-01-21"> <input type="time" id="startTime" value="00:00">
+                    <label for="endDate">Fin:</label> <input type="date" id="endDate" value="2026-04-26"> <input type="time" id="endTime" value="23:59">
+                    <label for="platformFilter">Red Social:</label> <select id="platformFilter"><option value="Todas">Todas</option><option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="TikTok">TikTok</option></select>
+                    <label for="postFilter">Pauta Específica:</label> <select id="postFilter"><option value="Todas">Ver Todas las Pautas</option><option value="https://www.instagram.com/p/DWzda2ngMxg/">Pauta 1 (Instagram)</option><option value="https://www.facebook.com/100064672685926/posts/1302481325250945/">Pauta 2 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302481211917623/">Pauta 3 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1334919078673836/">Pauta 4 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302481341917610/">Pauta 5 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302481208584290/">Pauta 6 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1304033688429042/">Pauta 7 (Facebook)</option><option value="https://www.instagram.com/p/DTv7wFbgIVP/">Pauta 8 (Instagram)</option><option value="https://www.instagram.com/p/DUZJ3pdAK6i/">Pauta 9 (Instagram)</option><option value="https://www.facebook.com/100064672685926/posts/1302481235250954/">Pauta 10 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302481255250952/">Pauta 11 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302478318584579/">Pauta 12 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302478391917905/">Pauta 13 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302481328584278/">Pauta 14 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302478268584584/">Pauta 15 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302478275251250/">Pauta 16 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302481298584281/">Pauta 17 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302478291917915/">Pauta 18 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1302478405251237/">Pauta 19 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316214310544313/">Pauta 20 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316214210544323/">Pauta 21 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316214207210990/">Pauta 22 (Facebook)</option><option value="https://www.facebook.com/100064867445065/posts/1341152268057009/">Pauta 23 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316946010471143/">Pauta 24 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316945687137842/">Pauta 25 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316945463804531/">Pauta 26 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316214230544321/">Pauta 27 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1334919048673839/">Pauta 28 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1334919052007172/">Pauta 29 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1334919038673840/">Pauta 30 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1334919072007170/">Pauta 31 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1367868282045582/">Pauta 32 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1304033931762351/">Pauta 33 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316945740471170/">Pauta 34 (Facebook)</option><option value="https://www.facebook.com/100064672685926/posts/1316214317210979/">Pauta 35 (Facebook)</option><option value="https://www.instagram.com/p/DTv7wPwgB0F/">Pauta 36 (Instagram)</option><option value="https://www.instagram.com/p/DTv7kFPAC5g/">Pauta 37 (Instagram)</option><option value="https://www.instagram.com/p/DTv7ljhgGtu/">Pauta 38 (Instagram)</option><option value="https://www.instagram.com/p/DTv7xkRgKdC/">Pauta 39 (Instagram)</option><option value="https://www.instagram.com/p/DTv7mDZgP4h/">Pauta 40 (Instagram)</option><option value="https://www.instagram.com/p/DTv7mbuAAcw/">Pauta 41 (Instagram)</option><option value="https://www.instagram.com/p/DTv7xFfgAnc/">Pauta 42 (Instagram)</option><option value="https://www.instagram.com/p/DTv7xLQgAc6/">Pauta 43 (Instagram)</option><option value="https://www.instagram.com/p/DTv7mV4gIn9/">Pauta 44 (Instagram)</option><option value="https://www.instagram.com/p/DTv7kViADcy/">Pauta 45 (Instagram)</option><option value="https://www.instagram.com/p/DTv7wzRgFXz/">Pauta 46 (Instagram)</option><option value="https://www.instagram.com/p/DTv7v7QAO57/">Pauta 47 (Instagram)</option><option value="https://www.instagram.com/p/DT0eGykgOCW/">Pauta 48 (Instagram)</option><option value="https://www.instagram.com/p/DUZJ3DFAP2f/">Pauta 49 (Instagram)</option><option value="https://www.instagram.com/p/DTv7w2fgB6D/">Pauta 50 (Instagram)</option><option value="https://www.facebook.com/100064672685926/posts/1316944213804656/">Pauta 51 (Facebook)</option><option value="https://www.instagram.com/p/DUZJ3eyAIz0/">Pauta 52 (Instagram)</option><option value="https://www.instagram.com/p/DUZJ3g2gFfw/">Pauta 53 (Instagram)</option><option value="https://www.instagram.com/p/DUbI8DNANZb/">Pauta 54 (Instagram)</option><option value="https://www.instagram.com/p/DUZJ5d1ALPT/">Pauta 55 (Instagram)</option><option value="https://www.instagram.com/p/DUbJHe2AO5a/">Pauta 56 (Instagram)</option><option value="https://www.instagram.com/p/DUbI8uCgB2n/">Pauta 57 (Instagram)</option><option value="https://www.instagram.com/p/DUbJHyugNkG/">Pauta 58 (Instagram)</option><option value="https://www.instagram.com/p/DUbIxHEAPZB/">Pauta 59 (Instagram)</option><option value="https://www.instagram.com/p/DUi6YciAMYK/">Pauta 60 (Instagram)</option><option value="https://www.instagram.com/p/DVPO9c2APFz/">Pauta 61 (Instagram)</option><option value="https://www.instagram.com/p/DVeFEt7gCvc/">Pauta 62 (Instagram)</option><option value="https://www.instagram.com/p/DVPO8XfgMDv/">Pauta 63 (Instagram)</option><option value="https://www.instagram.com/p/DVPO8W9gGSf/">Pauta 64 (Instagram)</option><option value="https://www.instagram.com/p/DVPO69eAJXC/">Pauta 65 (Instagram)</option><option value="https://www.instagram.com/p/DWzdalAAIDR/">Pauta 66 (Instagram)</option><option value="https://www.instagram.com/p/DUivrpRgMcb/">Pauta 67 (Instagram)</option><option value="https://www.instagram.com/p/DUiaVYGgNjP/">Pauta 68 (Instagram)</option><option value="https://www.instagram.com/p/DUiaWWegA9a/">Pauta 69 (Instagram)</option><option value="https://www.instagram.com/p/DUiaM4dAFWW/">Pauta 70 (Instagram)</option><option value="https://www.instagram.com/p/DUiaMa-AMqP/">Pauta 71 (Instagram)</option><option value="https://www.instagram.com/p/DUiaWXUgA6f/">Pauta 72 (Instagram)</option><option value="https://www.instagram.com/p/DUiaMggAJtp/">Pauta 73 (Instagram)</option><option value="https://www.instagram.com/p/DUiaee2AMKx/">Pauta 74 (Instagram)</option><option value="https://www.instagram.com/p/DUiaVmLgJ_e/">Pauta 75 (Instagram)</option><option value="https://www.instagram.com/p/DUiaVvXgALR/">Pauta 76 (Instagram)</option><option value="https://www.instagram.com/p/DUiaWquADBc/">Pauta 77 (Instagram)</option><option value="https://www.instagram.com/p/DUiaODWgM9h/">Pauta 78 (Instagram)</option><option value="https://www.instagram.com/p/DUiaNCqgBL3/">Pauta 79 (Instagram)</option><option value="https://www.instagram.com/p/DUiaWOpAPJ8/">Pauta 80 (Instagram)</option><option value="https://www.instagram.com/p/DUiaW8bAMy2/">Pauta 81 (Instagram)</option><option value="https://www.instagram.com/p/DUiaMfRgE6n/">Pauta 82 (Instagram)</option><option value="https://www.instagram.com/p/DUiae9AAGfE/">Pauta 83 (Instagram)</option></select>
+                    <label for="topicFilter">Tema:</label> <select id="topicFilter"><option value="Todos">Todos los Temas</option></select>
+                </div>
+            </div>
+            
+            <div class="card post-links">
+                <h2 class="section-title">Listado de Pautas Activas</h2>
+                <div id="post-links-table"></div>
+                <div id="post-links-pagination" class="pagination-controls"></div>
+            </div>
+
+            <div class="card"><div id="stats-grid" class="stats-grid"></div></div>
+            
+            <div class="card charts-section">
+                <h2 class="section-title">Análisis General</h2>
+                <div class="charts-grid">
+                    <div class="chart-container"><canvas id="postCountChart"></canvas></div>
+                    <div class="chart-container"><canvas id="sentimentChart"></canvas></div>
+                    <div class="chart-container"><canvas id="topicsChart"></canvas></div>
+                    <div class="chart-container full-width"><canvas id="sentimentByTopicChart"></canvas></div>
+                    <div class="chart-container full-width"><canvas id="dailyChart"></canvas></div>
+                    <div class="chart-container full-width"><canvas id="hourlyChart"></canvas></div>
+                </div>
+            </div>
+            
+            <div class="card comments-section">
+                <h2 class="section-title">💬 Comentarios Filtrados</h2>
+                <div id="comments-controls" class="comments-controls"></div>
+                <div id="comments-list"></div>
+                <div id="comments-pagination" class="pagination-controls"></div>
+            </div>
+        </div>
+
+        <script>
+            // Plugin personalizado para mostrar valores y porcentajes en gráficas circulares
+            const doughnutLabelPlugin = {
+                id: 'doughnutLabel',
+                afterDatasetsDraw(chart, args, options) {
+                    const { ctx, data } = chart;
+                    
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        if (!meta.hidden) {
+                            meta.data.forEach((element, index) => {
+                                const value = dataset.data[index];
+                                
+                                // Calcular porcentaje
+                                const total = dataset.data.reduce((acc, val) => acc + val, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                
+                                // Obtener posición del centro del segmento
+                                const { x, y } = element.tooltipPosition();
+                                
+                                // Configurar el texto
+                                ctx.save();
+                                ctx.fillStyle = '#fff';
+                                ctx.font = 'bold 14px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                
+                                // Dibujar valor
+                                ctx.fillText(value, x, y - 8);
+                                
+                                // Dibujar porcentaje
+                                ctx.fillText(`(${percentage}%)`, x, y + 8);
+                                
+                                ctx.restore();
+                            });
+                        }
+                    });
+                }
+            };
+            
+            document.addEventListener('DOMContentLoaded', () => {
+                const allData = JSON.parse(document.getElementById('data-store').textContent);
+                const allPostsData = JSON.parse(document.getElementById('posts-data-store').textContent);
+                
+                const startDateInput = document.getElementById('startDate'), startTimeInput = document.getElementById('startTime');
+                const endDateInput = document.getElementById('endDate'), endTimeInput = document.getElementById('endTime');
+                const platformFilter = document.getElementById('platformFilter'), postFilter = document.getElementById('postFilter');
+                const topicFilter = document.getElementById('topicFilter');
+
+                // Inicializar filtro de temas con los temas únicos del dataset
+                const uniqueTopics = [...new Set(allData.map(d => d.topic))].sort();
+                uniqueTopics.forEach(topic => {
+                    const option = document.createElement('option');
+                    option.value = topic;
+                    option.textContent = topic;
+                    topicFilter.appendChild(option);
+                });
+
+                const charts = {};
+                Object.assign(charts, {
+                    postCount: new Chart(document.getElementById('postCountChart'), { 
+                        type: 'doughnut',
+                        data: { labels: [], datasets: [{}] },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                title: { display: true, text: 'Distribución de Pautas por Red Social' },
+                                legend: { display: true, position: 'bottom' },
+                                tooltip: { 
+                                    enabled: true,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return label + ': ' + value + ' (' + percentage + '%)';
+                                        }
+                                    }
+                                }
+                            } 
+                        },
+                        plugins: [doughnutLabelPlugin]
+                    }),
+                    sentiment: new Chart(document.getElementById('sentimentChart'), { 
+                        type: 'doughnut',
+                        data: { labels: [], datasets: [{}] },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                title: { display: true, text: 'Distribución de Sentimientos' },
+                                legend: { display: true, position: 'bottom' },
+                                tooltip: { 
+                                    enabled: true,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return label + ': ' + value + ' (' + percentage + '%)';
+                                        }
+                                    }
+                                }
+                            } 
+                        },
+                        plugins: [doughnutLabelPlugin]
+                    }),
+                    topics: new Chart(document.getElementById('topicsChart'), { 
+                        type: 'doughnut',
+                        data: { labels: [], datasets: [{}] },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                title: { display: true, text: 'Distribución por Temas' },
+                                legend: { display: true, position: 'bottom' },
+                                tooltip: { 
+                                    enabled: true,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return label + ': ' + value + ' (' + percentage + '%)';
+                                        }
+                                    }
+                                }
+                            } 
+                        },
+                        plugins: [doughnutLabelPlugin]
+                    }),
+                    sentimentByTopic: new Chart(document.getElementById('sentimentByTopicChart'), { type: 'bar', options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { title: { display: true, text: 'Sentimiento por Tema' }, datalabels: { display: false } } } }),
+                    daily: new Chart(document.getElementById('dailyChart'), { type: 'bar', options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { title: { display: true, text: 'Volumen de Comentarios por Día' }, datalabels: { display: false } } } }),
+                    hourly: new Chart(document.getElementById('hourlyChart'), { type: 'bar', options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, position: 'left', title: { display: true, text: 'Comentarios por Hora' } }, y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Total Acumulado' } } }, plugins: { title: { display: true, text: 'Volumen de Comentarios por Hora' }, datalabels: { display: false } } } })
+                });
+
+                let postLinksCurrentPage = 1;
+                const POST_LINKS_PER_PAGE = 5;
+                let commentsCurrentPage = 1;
+                const COMMENTS_PER_PAGE = 10;
+                let commentsSentimentFilter = 'Todos';
+
+                const updatePostLinks = () => {
+                    const startFilter = `${startDateInput.value}T${startTimeInput.value}:00`;
+                    const endFilter = `${endDateInput.value}T${endTimeInput.value}:59`;
+                    const selectedPlatform = platformFilter.value;
+                    const selectedPost = postFilter.value;
+                    const selectedTopic = topicFilter.value;
+                    
+                    // Filtrar comentarios según los criterios activos (fecha, plataforma, pauta, tema)
+                    let filteredComments = allData.filter(d => d.date >= startFilter && d.date <= endFilter);
+                    
+                    // Aplicar filtros adicionales
+                    if (selectedPost !== 'Todas') {
+                        filteredComments = filteredComments.filter(d => d.post_url === selectedPost);
+                    } else if (selectedPlatform !== 'Todas') {
+                        filteredComments = filteredComments.filter(d => d.platform === selectedPlatform);
+                    }
+                    
+                    if (selectedTopic !== 'Todos') {
+                        filteredComments = filteredComments.filter(d => d.topic === selectedTopic);
+                    }
+                    
+                    // Determinar qué pautas mostrar según el filtro de pauta/plataforma
+                    let postsToShow = allPostsData;
+                    if (selectedPost !== 'Todas') {
+                        postsToShow = allPostsData.filter(p => p.post_url === selectedPost);
+                    } else if (selectedPlatform !== 'Todas') {
+                        postsToShow = allPostsData.filter(p => p.platform === selectedPlatform);
+                    }
+                    
+                    // Recalcular conteos de comentarios basados en los filtros aplicados
+                    postsToShow = postsToShow.map(p => {
+                        const filteredCount = filteredComments.filter(d => d.post_url === p.post_url).length;
+                        return {
+                            ...p,
+                            comment_count: filteredCount,
+                            original_count: p.comment_count
+                        };
+                    });
+                    
+                    // Filtrar pautas que no tienen comentarios con los filtros aplicados
+                    postsToShow = postsToShow.filter(p => p.comment_count > 0);
+                    
+                    // Re-ordenar por conteo de comentarios filtrados
+                    postsToShow.sort((a, b) => b.comment_count - a.comment_count);
+                    
+                    const tableDiv = document.getElementById('post-links-table');
+                    const paginationDiv = document.getElementById('post-links-pagination');
+                    tableDiv.innerHTML = ''; paginationDiv.innerHTML = '';
+                    
+                    if (postsToShow.length === 0) {
+                        tableDiv.innerHTML = "<p style='text-align:center; padding:20px;'>No hay pautas con comentarios que cumplan los filtros seleccionados.</p>";
+                        return;
+                    }
+
+                    const totalPages = Math.ceil(postsToShow.length / POST_LINKS_PER_PAGE);
+                    if (postLinksCurrentPage > totalPages) postLinksCurrentPage = 1;
+
+                    const startIndex = (postLinksCurrentPage - 1) * POST_LINKS_PER_PAGE;
+                    const paginatedPosts = postsToShow.slice(startIndex, startIndex + POST_LINKS_PER_PAGE);
+
+                    let tableHTML = '<table><tr><th>Pauta</th><th>Comentarios';
+                    if (selectedTopic !== 'Todos' || startFilter !== `${startDateInput.min}T00:00:00` || endFilter !== `${endDateInput.max}T23:59:59` || selectedPost !== 'Todas') {
+                        tableHTML += ' (Filtrados)';
+                    }
+                    tableHTML += '</th><th>Enlace</th></tr>';
+                    
+                    paginatedPosts.forEach(p => {
+                        const linkUrl = p.post_url_original || p.post_url;
+                        tableHTML += `<tr><td>${p.post_label}</td><td><b>${p.comment_count}</b></td><td><a href="${linkUrl}" target="_blank">Ver Pauta</a></td></tr>`;
+                    });
+                    tableHTML += '</table>';
+                    tableDiv.innerHTML = tableHTML;
+
+                    if (totalPages > 1) {
+                        paginationDiv.innerHTML = `<button id="prevPageBtn" ${ (postLinksCurrentPage === 1) ? 'disabled' : '' }>Anterior</button><span>Página ${postLinksCurrentPage} de ${totalPages}</span><button id="nextPageBtn" ${ (postLinksCurrentPage === totalPages) ? 'disabled' : '' }>Siguiente</button>`;
+                        document.getElementById('prevPageBtn')?.addEventListener('click', () => { if (postLinksCurrentPage > 1) { postLinksCurrentPage--; updatePostLinks(); } });
+                        document.getElementById('nextPageBtn')?.addEventListener('click', () => { if (postLinksCurrentPage < totalPages) { postLinksCurrentPage++; updatePostLinks(); } });
+                    }
+                };
+                
+                const updateDashboard = () => {
+                    const startFilter = `${startDateInput.value}T${startTimeInput.value}:00`;
+                    const endFilter = `${endDateInput.value}T${endTimeInput.value}:59`;
+                    const selectedPlatform = platformFilter.value;
+                    const selectedPost = postFilter.value;
+                    const selectedTopic = topicFilter.value;
+                    
+                    // Filtrar por fecha primero
+                    let filteredData = allData.filter(d => d.date >= startFilter && d.date <= endFilter);
+                    let postsToShow = allPostsData;
+
+                    // Filtrar por post específico
+                    if (selectedPost !== 'Todas') {
+                        filteredData = filteredData.filter(d => d.post_url === selectedPost);
+                        postsToShow = allPostsData.filter(p => p.post_url === selectedPost);
+                    } else if (selectedPlatform !== 'Todas') {
+                        filteredData = filteredData.filter(d => d.platform === selectedPlatform);
+                        postsToShow = allPostsData.filter(p => p.platform === selectedPlatform);
+                    }
+
+                    // Filtrar por tema
+                    if (selectedTopic !== 'Todos') {
+                        filteredData = filteredData.filter(d => d.topic === selectedTopic);
+                    }
+                    
+                    updateStats(filteredData, postsToShow.length);
+                    updateCharts(allPostsData, filteredData);
+                    updateCommentsList(filteredData);
+                };
+                
+                const updateStats = (data, totalPosts) => {
+                    const total = data.length;
+                    const sentiments = data.reduce((acc, curr) => { acc[curr.sentiment] = (acc[curr.sentiment] || 0) + 1; return acc; }, {});
+                    const pos = sentiments['Positivo'] || 0;
+                    const neg = sentiments['Negativo'] || 0;
+                    const neu = sentiments['Neutro'] || 0;
+                    
+                    document.getElementById('stats-grid').innerHTML = `
+                        <div class="stat-card pautas">
+                            <div class="stat-number pautas-text">${totalPosts}</div>
+                            <div>Total Pautas</div>
+                        </div>
+                        <div class="stat-card total">
+                            <div class="stat-number total-text">${total}</div>
+                            <div>Total Comentarios</div>
+                        </div>
+                        <div class="stat-card positive">
+                            <div class="stat-number positive-text">${pos}</div>
+                            <div>Positivos (${(total > 0 ? (pos / total * 100) : 0).toFixed(1)}%)</div>
+                        </div>
+                        <div class="stat-card negative">
+                            <div class="stat-number negative-text">${neg}</div>
+                            <div>Negativos (${(total > 0 ? (neg / total * 100) : 0).toFixed(1)}%)</div>
+                        </div>
+                        <div class="stat-card neutral">
+                            <div class="stat-number neutral-text">${neu}</div>
+                            <div>Neutros (${(total > 0 ? (neu / total * 100) : 0).toFixed(1)}%)</div>
+                        </div>
+                    `;
+                };
+                
+                const updateCommentsList = (data) => {
+                    const dataToShow = (commentsSentimentFilter === 'Todos') ? data : data.filter(d => d.sentiment === commentsSentimentFilter);
+                    dataToShow.sort((a, b) => b.date.localeCompare(a.date));
+
+                    const controlsDiv = document.getElementById('comments-controls');
+                    const listDiv = document.getElementById('comments-list');
+                    const paginationDiv = document.getElementById('comments-pagination');
+                    listDiv.innerHTML = ''; paginationDiv.innerHTML = '';
+                    
+                    controlsDiv.innerHTML = ['Todos', 'Positivo', 'Negativo', 'Neutro'].map(s => 
+                        `<button class="filter-btn ${commentsSentimentFilter === s ? 'active' : ''}" data-sentiment="${s}">${s}</button>`
+                    ).join('');
+                    
+                    controlsDiv.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            commentsSentimentFilter = e.target.dataset.sentiment;
+                            commentsCurrentPage = 1;
+                            updateCommentsList(data);
+                        });
+                    });
+
+                    if (dataToShow.length === 0) {
+                        listDiv.innerHTML = "<p style='text-align:center;'>No hay comentarios para mostrar.</p>";
+                        return;
+                    }
+
+                    const totalPages = Math.ceil(dataToShow.length / COMMENTS_PER_PAGE);
+                    if (commentsCurrentPage > totalPages) commentsCurrentPage = 1;
+
+                    const startIndex = (commentsCurrentPage - 1) * COMMENTS_PER_PAGE;
+                    const paginatedComments = dataToShow.slice(startIndex, startIndex + COMMENTS_PER_PAGE);
+
+                    const sentimentToCss = { 'Positivo': 'positive', 'Negativo': 'negative', 'Neutro': 'neutral' };
+                    let listHtml = '';
+                    paginatedComments.forEach(d => {
+                        const escapedComment = d.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        const formattedDate = new Date(d.date).toLocaleString('es-CO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+                        listHtml += `<div class="comment-item comment-${sentimentToCss[d.sentiment]}">
+                                        <div class="comment-meta">
+                                            <strong>[${d.sentiment.toUpperCase()}] (Tema: ${d.topic})</strong>
+                                            <span class="comment-date">${formattedDate}</span>
+                                        </div>
+                                        <div>${escapedComment}</div>
+                                    </div>`;
+                    });
+                    listDiv.innerHTML = listHtml;
+
+                    if (totalPages > 1) {
+                        paginationDiv.innerHTML = `<button id="prevCommentPageBtn" ${ (commentsCurrentPage === 1) ? 'disabled' : '' }>Anterior</button><span>Página ${commentsCurrentPage} de ${totalPages}</span><button id="nextCommentPageBtn" ${ (commentsCurrentPage === totalPages) ? 'disabled' : '' }>Siguiente</button>`;
+                        document.getElementById('prevCommentPageBtn')?.addEventListener('click', () => { if (commentsCurrentPage > 1) { commentsCurrentPage--; updateCommentsList(data); } });
+                        document.getElementById('nextCommentPageBtn')?.addEventListener('click', () => { if (commentsCurrentPage < totalPages) { commentsCurrentPage++; updateCommentsList(data); } });
+                    }
+                };
+
+                const updateCharts = (postsData, filteredData) => { 
+                    // Gráfico de pautas por plataforma
+                    const postCounts = postsData.reduce((acc, curr) => { acc[curr.platform] = (acc[curr.platform] || 0) + 1; return acc; }, {}); 
+                    const postCountLabels = Object.keys(postCounts); 
+                    charts.postCount.data.labels = postCountLabels; 
+                    charts.postCount.data.datasets = [{ data: postCountLabels.map(p => postCounts[p]), backgroundColor: ['#007bff', '#6f42c1', '#dc3545', '#ffc107', '#28a745'] }]; 
+                    charts.postCount.update(); 
+                    
+                    // Gráfico de sentimientos
+                    const sentimentCounts = filteredData.reduce((acc, curr) => { acc[curr.sentiment] = (acc[curr.sentiment] || 0) + 1; return acc; }, {}); 
+                    charts.sentiment.data.labels = ['Positivo', 'Negativo', 'Neutro']; 
+                    charts.sentiment.data.datasets = [{ data: [sentimentCounts['Positivo']||0, sentimentCounts['Negativo']||0, sentimentCounts['Neutro']||0], backgroundColor: ['#28a745', '#dc3545', '#ffc107'] }]; 
+                    charts.sentiment.update(); 
+                    
+                    // Gráfico de pastel por temas
+                    const topicCounts = filteredData.reduce((acc, curr) => { acc[curr.topic] = (acc[curr.topic] || 0) + 1; return acc; }, {}); 
+                    const sortedTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]); 
+                    const topicLabels = sortedTopics.map(d => d[0]);
+                    const topicData = sortedTopics.map(d => d[1]);
+                    
+                    // Paleta de colores para temas
+                    const topicColors = ['#3498db', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#95a5a6', '#e67e22', '#16a085', '#c0392b'];
+                    
+                    charts.topics.data.labels = topicLabels; 
+                    charts.topics.data.datasets = [{ 
+                        data: topicData, 
+                        backgroundColor: topicColors.slice(0, topicLabels.length) 
+                    }]; 
+                    charts.topics.update(); 
+                    
+                    // Sentimiento por tema (gráfico de barras)
+                    const sbtCounts = filteredData.reduce((acc, curr) => { if (!acc[curr.topic]) acc[curr.topic] = { Positivo: 0, Negativo: 0, Neutro: 0 }; acc[curr.topic][curr.sentiment]++; return acc; }, {}); 
+                    const sbtLabels = Object.keys(sbtCounts).sort((a,b) => (sbtCounts[b].Positivo + sbtCounts[b].Negativo + sbtCounts[b].Neutro) - (sbtCounts[a].Positivo + sbtCounts[a].Negativo + sbtCounts[a].Neutro)); 
+                    charts.sentimentByTopic.data.labels = sbtLabels; 
+                    charts.sentimentByTopic.data.datasets = [ 
+                        { label: 'Positivo', data: sbtLabels.map(l => sbtCounts[l].Positivo), backgroundColor: '#28a745' }, 
+                        { label: 'Negativo', data: sbtLabels.map(l => sbtCounts[l].Negativo), backgroundColor: '#dc3545' }, 
+                        { label: 'Neutro', data: sbtLabels.map(l => sbtCounts[l].Neutro), backgroundColor: '#ffc107' } 
+                    ]; 
+                    charts.sentimentByTopic.update(); 
+                    
+                    // Volumen diario
+                    const dailyCounts = filteredData.reduce((acc, curr) => { const day = curr.date.substring(0, 10); if (!acc[day]) { acc[day] = { Positivo: 0, Negativo: 0, Neutro: 0 }; } acc[day][curr.sentiment]++; return acc; }, {}); 
+                    const sortedDays = Object.keys(dailyCounts).sort(); 
+                    charts.daily.data.labels = sortedDays.map(d => new Date(d+'T00:00:00').toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })); 
+                    charts.daily.data.datasets = [ 
+                        { label: 'Positivo', data: sortedDays.map(d => dailyCounts[d].Positivo), backgroundColor: '#28a745' }, 
+                        { label: 'Negativo', data: sortedDays.map(d => dailyCounts[d].Negativo), backgroundColor: '#dc3545' }, 
+                        { label: 'Neutro', data: sortedDays.map(d => dailyCounts[d].Neutro), backgroundColor: '#ffc107' } 
+                    ]; 
+                    charts.daily.update(); 
+                    
+                    // Volumen por hora
+                    const hourlyCounts = filteredData.reduce((acc, curr) => { const hour = curr.date.substring(0, 13) + ':00:00'; if (!acc[hour]) acc[hour] = { Positivo: 0, Negativo: 0, Neutro: 0, Total: 0 }; acc[hour][curr.sentiment]++; acc[hour].Total++; return acc; }, {}); 
+                    const sortedHours = Object.keys(hourlyCounts).sort(); 
+                    let cumulative = 0; 
+                    const cumulativeData = sortedHours.map(h => { cumulative += hourlyCounts[h].Total; return cumulative; }); 
+                    charts.hourly.data.labels = sortedHours.map(h => new Date(h).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' })); 
+                    charts.hourly.data.datasets = [ 
+                        { label: 'Positivo', data: sortedHours.map(h => hourlyCounts[h].Positivo), backgroundColor: '#28a745', yAxisID: 'y' }, 
+                        { label: 'Negativo', data: sortedHours.map(h => hourlyCounts[h].Negativo), backgroundColor: '#dc3545', yAxisID: 'y' }, 
+                        { label: 'Neutro', data: sortedHours.map(h => hourlyCounts[h].Neutro), backgroundColor: '#ffc107', yAxisID: 'y' }, 
+                        { label: 'Acumulado', type: 'line', data: cumulativeData, borderColor: '#007bff', yAxisID: 'y1' } 
+                    ]; 
+                    charts.hourly.update(); 
+                };
+                
+                const updatePostFilterOptions = () => { 
+                    const selectedPlatform = platformFilter.value; 
+                    const currentPostSelection = postFilter.value; 
+                    let postsToShow = (selectedPlatform === 'Todas') ? allPostsData : allPostsData.filter(p => p.platform === selectedPlatform); 
+                    postFilter.innerHTML = '<option value="Todas">Ver Todas las Pautas</option>'; 
+                    postsToShow.forEach(p => { postFilter.innerHTML += `<option value="${p.post_url}">${p.post_label}</option>`; }); 
+                    if (postsToShow.some(p => p.post_url === currentPostSelection)) { postFilter.value = currentPostSelection; } 
+                    else { postFilter.value = 'Todas'; } 
+                };
+
+                platformFilter.addEventListener('change', () => { updatePostFilterOptions(); postLinksCurrentPage = 1; updatePostLinks(); updateDashboard(); });
+                postFilter.addEventListener('change', () => { postLinksCurrentPage = 1; updatePostLinks(); updateDashboard(); });
+                topicFilter.addEventListener('change', () => { postLinksCurrentPage = 1; updatePostLinks(); updateDashboard(); });
+                startDateInput.addEventListener('change', () => { postLinksCurrentPage = 1; updatePostLinks(); updateDashboard(); }); 
+                startTimeInput.addEventListener('change', () => { postLinksCurrentPage = 1; updatePostLinks(); updateDashboard(); });
+                endDateInput.addEventListener('change', () => { postLinksCurrentPage = 1; updatePostLinks(); updateDashboard(); }); 
+                endTimeInput.addEventListener('change', () => { postLinksCurrentPage = 1; updatePostLinks(); updateDashboard(); });
+                
+                updatePostLinks();
+                updateDashboard();
+            });
+        </script>
+    </body>
+    </html>
+    
